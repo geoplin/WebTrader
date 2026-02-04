@@ -5,6 +5,6 @@ namespace WebTrader.Interfaces
 {
     public interface ITradeRepository
     {
-        List<OuterOrder> CalculateTrade(string action, float amount);
+        List<OuterOrder> CalculateTrade(string action, double amount);
     }
 }

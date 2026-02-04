@@ -8,7 +8,7 @@ namespace WebTrader.Repositories
     {
         public TradeRepository() { }
 
-        public List<OuterOrder> CalculateTrade(string action, float amount)
+        public List<OuterOrder> CalculateTrade(string action, double amount)
         {
             string filePath = "resources/order_books_data";
             List<OuterOrder> orders = [];
@@ -56,7 +56,7 @@ namespace WebTrader.Repositories
             return orders.Skip(index).Take(1).First();
         }
 
-        private List<OuterOrder> FindOrders(List<OuterOrder> orders, float amount)
+        private List<OuterOrder> FindOrders(List<OuterOrder> orders, double amount)
         {
             int orderNumber = 0;
             List<OuterOrder> bestOrders = [];
@@ -97,15 +97,15 @@ namespace WebTrader.Repositories
             return JsonSerializer.Deserialize<List<OrderBook>>(jsonString);
         }
 
-        private bool VerifyInput(string action, float amount)
+        private bool VerifyInput(string action, double amount)
         {
             if (!action.ToLower().Equals("buy") && !action.ToLower().Equals("sell"))
             {
-                throw new Exception("Invalid action");
+                return false;
             }
             if (amount <= 0)
             {
-                throw new Exception("Amount must be a positive number");
+                return false;
             }
             return true;
         }
