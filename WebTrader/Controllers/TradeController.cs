@@ -22,7 +22,7 @@ namespace WebTrader.Controllers
             var result = _tradeRepository.CalculateTrade(action, amount);
             if (result == null)
             {
-                return UnprocessableEntity("Wrong action");
+                return BadRequest();
             }
             return Ok(result);
         }

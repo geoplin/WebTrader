@@ -1,9 +1,10 @@
-﻿using WebTrader.Repositories;
+﻿using Trader.objects;
+using WebTrader.Repositories;
 
 namespace WebTrader.Interfaces
 {
     public interface ITradeRepository
     {
-        string? CalculateTrade(string action, float amount);
+        List<OuterOrder> CalculateTrade(string action, float amount);
     }
 }

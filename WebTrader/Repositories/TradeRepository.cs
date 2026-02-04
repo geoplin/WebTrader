@@ -8,14 +8,10 @@ namespace WebTrader.Repositories
     {
         public TradeRepository() { }
 
-        public string? CalculateTrade(string action, float amount)
+        public List<OuterOrder> CalculateTrade(string action, float amount)
         {
             string filePath = "resources/order_books_data";
-            float endPrice = 0;
-            bool sell = true;
-            List<OuterOrder> askOrders = [];
-            List<OuterOrder> bidOrders = [];
-            List<OuterOrder>? bestOrders = [];
+            List<OuterOrder> orders = [];
 
             if (!VerifyInput(action, amount))
             {
@@ -26,45 +22,33 @@ namespace WebTrader.Repositories
             List<OrderBook>? orderBooks = ProcessFile(filePath);
 
             // Combine and order all avaliable orders
-            if (orderBooks != null)
+            if (orderBooks == null)
             {
-                askOrders = orderBooks
-                    .SelectMany(i => i.Asks)
-                    .OrderBy(i => i.Order.Price)
-                    .ToList();
-
-                bidOrders = orderBooks
-                    .SelectMany(i => i.Bids)
-                    .OrderByDescending(i => i.Order.Price)
-                    .ToList();
+                return null;
             }
 
             if (action.ToLower().Equals("sell"))
             {
-                sell = true;
+                orders = orderBooks
+                    .SelectMany(i => i.Bids)
+                    .OrderByDescending(i => i.Order.Price)
+                    .ToList();
+
+                return FindOrders(orders, amount);
             }
             else if (action.ToLower().Equals("buy"))
             {
-                sell = false;
+                orders = orderBooks
+                    .SelectMany(i => i.Asks)
+                    .OrderBy(i => i.Order.Price)
+                    .ToList();
+
+                return FindOrders(orders, amount);
             }
             else
             {
                 return null;
             }
-
-            // Calculation of buy/sell price
-            OuterOrder topOrder = new();
-            if (sell)
-            {
-                endPrice = CalculatePrice(bidOrders, bestOrders, amount);
-            }
-            else
-            {
-                endPrice = CalculatePrice(askOrders, bestOrders, amount);
-            }
-
-            // Output of the end price, number of orders and list the orders used to calculate the price
-            return FormatOutput(bestOrders, endPrice);
         }
 
         private OuterOrder GetNextOrder(int index, List<OuterOrder> orders)
@@ -72,10 +56,11 @@ namespace WebTrader.Repositories
             return orders.Skip(index).Take(1).First();
         }
 
-        private float CalculatePrice(List<OuterOrder> orders, List<OuterOrder>? bestOrders, float amount)
+        private List<OuterOrder> FindOrders(List<OuterOrder> orders, float amount)
         {
             int orderNumber = 0;
             float endPrice = 0;
+            List<OuterOrder> bestOrders = [];
             while (amount > 0)
             {
                 OuterOrder topOrder = GetNextOrder(orderNumber, orders);
@@ -91,11 +76,9 @@ namespace WebTrader.Repositories
                     topOrder.Order.Amount += amount;
                     endPrice += topOrder.Order.Amount * topOrder.Order.Price;
                 }
-
                 bestOrders.Add(topOrder);
             }
-
-            return endPrice;
+            return bestOrders;
         }
 
         private List<OrderBook>? ProcessFile(string filePath)
@@ -115,21 +98,6 @@ namespace WebTrader.Repositories
             string jsonString = String.Join(",", orderBookLines);
             jsonString = "[" + jsonString + "]";
             return JsonSerializer.Deserialize<List<OrderBook>>(jsonString);
-        }
-
-        private string FormatOutput(List<OuterOrder> orders, float endPrice)
-        {
-            string result = string.Empty;
-            result += $"End price is: {endPrice}€\n";
-            result += $"Number of orders required: {orders.Count}\n";
-            foreach (OuterOrder order in orders)
-            {
-                result += ("{\n");
-                result += $"\tOrder amount: {order.Order.Amount}\n";
-                result += $"\tOrder Price: {order.Order.Price}€\n";
-                result += ("}\n");
-            }
-            return result;
         }
 
         private bool VerifyInput(string action, float amount)
