@@ -59,7 +59,6 @@ namespace WebTrader.Repositories
         private List<OuterOrder> FindOrders(List<OuterOrder> orders, float amount)
         {
             int orderNumber = 0;
-            float endPrice = 0;
             List<OuterOrder> bestOrders = [];
             while (amount > 0)
             {
@@ -68,13 +67,11 @@ namespace WebTrader.Repositories
                 amount -= topOrder.Order.Amount;
                 if (amount > 0)
                 {
-                    endPrice += topOrder.Order.Amount * topOrder.Order.Price;
                     orderNumber++;
                 }
                 else
                 {
                     topOrder.Order.Amount += amount;
-                    endPrice += topOrder.Order.Amount * topOrder.Order.Price;
                 }
                 bestOrders.Add(topOrder);
             }
